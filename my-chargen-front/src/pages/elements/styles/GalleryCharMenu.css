@@ -1,0 +1,14 @@
+.gcm-menu-item{
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin: 1.5em 0;
+}
+
+.gcm-item-label{
+ font-style: italic;
+ font-weight: bold;
+}
+.gcm-item-value{
+
+}

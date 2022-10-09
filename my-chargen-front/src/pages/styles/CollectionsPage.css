@@ -1,0 +1,10 @@
+.collection-list-container{
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+}
+.collection-card-container{
+    color: black;
+    text-decoration: none;
+    font-style: italic;
+}

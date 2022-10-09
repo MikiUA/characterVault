@@ -1,0 +1,39 @@
+.GalleryPage-container{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    position: relative;
+}
+
+.menu-container{
+    display: block;
+    height: 100%;
+    width: 18%;
+    min-width: 10em;
+    max-width: 30em;
+    background-color:bisque;
+    /* position: ; */
+    }
+
+  .menu-container.search-menu{
+     
+  border: 1px solid black;
+  }
+ 
+  .menu-container.char-menu{
+    
+    /* width: inherit; */
+    position: fixed;
+    top:2em;
+    left: 0;
+
+  border: 1px solid white;
+  overflow-y: auto;
+  }
+  .gallery-container{
+    width: 82%;
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    align-content: flex-start;
+  }
