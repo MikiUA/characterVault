@@ -1,3 +1,0 @@
-npx create-react-app characterVault-front
-cd characterVault-front
-npm-i-react-router-dom

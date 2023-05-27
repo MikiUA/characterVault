@@ -1,0 +1,18 @@
+.menu-container{
+    padding: 0 5%;
+}
+.menu-div{
+    padding-top: 2%;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid black;
+}
+
+.menu-div input{
+    max-width: 95%;
+}
+
+.menu-div label{
+    display: block;
+}

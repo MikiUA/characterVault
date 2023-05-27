@@ -1,0 +1,43 @@
+.container{
+    display: flex;
+    width: 8em;
+    height: 10em;
+    border: 1px solid black;
+    margin-top: 10px;
+    margin-left: 10px;
+    position: relative;
+    /* flex-wrap:wrap; */
+    flex-direction: column;
+    /* box-shadow: rgba(0, 0, 0, 0.15) 0px 5px 15px 0px; */
+
+}
+.image-container{
+    height: 1%; /*I don't know how this works, this param (whatever is set) does not apply to anything but without this line next does not work  */
+    flex-grow: 1;
+}
+.image{
+    width: 100%;
+    height: 100%;
+}
+.title{
+    width:  100%;
+    height:fit-content;
+    text-align: center;
+    border-top: 1px solid black;
+    background-color: aliceblue;
+    align-self: flex-end;
+}
+.second-title{
+    height: 50%;
+    border: 1px solid black;
+}
+
+.container:hover{
+    box-shadow: 0 3px 10px rgb(0 0 0 / 0.3);
+    margin-top: 5px;
+} 
+
+.container.active{
+    /* box-shadow: 0 5px 15px rgb(255 0 0 / 0.3); */
+    box-shadow: rgba(250, 250, 0, 0.96) 0px 22px 20px 4px;
+}
