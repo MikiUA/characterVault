@@ -10,8 +10,7 @@ This is the application for character creation and showcasing.
 </h4>
 <b>Note: </b> This application is <i>work in progress</i>. A lot of code hangs up on loose ends and is never reached, but is meant to be a base for future updates.
 <br><br>
-
-![Gallery](./Screenshots/0.Gallery.jpg "Gallery, Main Application Page")
+![Gallery](./Screenshots/v0.3/0.Gallery.jpg "Gallery, Main Application Page")
 
 other <b>screenshots</b> can be found in the corresponding subfolder.
 
