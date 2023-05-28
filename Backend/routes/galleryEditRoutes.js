@@ -1,38 +1,49 @@
-const express=require('express');
-const router=express.Router();
 const { authentificateEdit } = require('../middleware/authentificateUser');
 const { newCharacter, replaceCharacter } = require('../controllers/galleryEditChar');
-const { getHandledResult } = require('../exportable_functions/errorResponse');
 
-router.use(authentificateEdit);
+const { createRouter, routeHandler } = require('./createRouter');
 
-router.post('/collection/new',(req,res)=>{
+const newCharHandler=new routeHandler({
+    handledErrors:[400],
+    function:newCharacter,
+    response:{
+        status:201,
+        message:'Character created',
+        fields:['newCharacter']
+    }
+});
+const editCharHandler = new routeHandler({
+    handledErrors:[400],
+    function:replaceCharacter,
+    response:{
+        status:201,
+        message:'Success',
+        fields:['newCharacter']
+    }
 })
+const notImplementedHandler={
+    function:async (req)=>{throw {status:501,message:'Feature under development'}}
+};
 
-router.patch('/collection/:collectionID',(req,res)=>{
-})
+const routes={
+    post:{
+        '/character':newCharHandler,
+        '/character/new':newCharHandler, //placeholder
+        '/collection':notImplementedHandler,
+        '/collection/new':notImplementedHandler,
+        '/assignToCollection':notImplementedHandler,
+        '/unassignFromCollection':notImplementedHandler,
+    },
+    patch:{
+        '/character/:charID':editCharHandler,
+        '/collection/:collectionID':notImplementedHandler,
+    },
+    delete:{
+        '/character/:charID':notImplementedHandler,
+        '/collection/:collectionID':notImplementedHandler,        
+    }
+}
 
-router.delete('/collection/:collectionID',(req,res)=>{
-})
-
-router.post('/character/new',async (req,res)=>{
-    const success=await getHandledResult(()=>newCharacter(req),res);
-    if (success) return res.status(201).send({message:'character created'});
-})
-
-router.patch('/character/:charID',async (req,res)=>{
-    
-    const success=await getHandledResult(()=>replaceCharacter(req),res);
-    if (success) return res.status(200).send({message:'character replaced'});
-})
-
-router.delete('/character/:charID',(req,res)=>{
-})
-
-router.post('/assignToCollection',(req,res)=>{
-})
-
-router.post('/unassignFromCollection',(req,res)=>{
-})
+const router=createRouter(routes,authentificateEdit);
 
 module.exports = router

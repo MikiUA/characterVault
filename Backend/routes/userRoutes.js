@@ -1,24 +1,39 @@
-const express=require('express');
 const { authentificateViewPublic, authentificateEdit, authentificateAdmin } = require('../middleware/authentificateUser');
 const { getUserByID } = require('../controllers/user');
-const router=express.Router();
 
-router.get('/:userID',authentificateViewPublic,async (req,res)=>{
-    const {userID}=req.params;
-    const {user}= await getUserByID(userID,req.mongoClient);
-    if (user) res.status(200).send(user);
-    else res.status(400).send({message:"no user found"});
-})
+const { routeHandler, createRouter } = require('./createRouter');
 
-router.patch('/:userID',authentificateEdit,(req,res)=>{
-    
-})
+const notImplementedHandler={
+    function:async (req)=>{throw {status:501,message:'Feature under development'}}
+};
 
-router.delete('/:userID',authentificateEdit, (req,res)=>{
-    
-})
+const routes={
+    get:{
+        '/:userID':new routeHandler({
+            middleware:[authentificateViewPublic],
+            handledErrors:{400:"No user found"},
+            function:async (req)=>{
+                const {userID}=req.params;
+                return getUserByID(req,userID)
+            },
+            response:{
+                message:'User found',
+                fields:['user']
+            }
+        }),
+        '/all':notImplementedHandler
+    },
+    post:{// It's just register,I'll go collect register handler somewhere
+        '/':notImplementedHandler,
+        '/new':notImplementedHandler
+    },
+    patch:{
+        '/:userID':notImplementedHandler
+    },
+    delete:{
+        '/:userID':notImplementedHandler
+    }
+}
 
-router.get('/all',authentificateAdmin,(req, res) =>{
-    
-})
+const router=createRouter(routes);
 module.exports = router

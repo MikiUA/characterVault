@@ -1,63 +1,97 @@
 const { getCharacters,getCollections, getCollectionCharacters, getSingleCollection, getSingleChar } = require('../controllers/galleryView');
 const { queryToCharFilters } = require('../middleware/queryToCharFilters');
 const { authentificateViewPrivate, authentificateAdmin, authentificateViewPublic } = require('../middleware/authentificateUser');
- 
-const express=require('express');
-const { getHandledResult } = require('../exportable_functions/errorResponse');
+
 const { ObjectId } = require('mongodb');
-const router=express.Router();
+const {createRouter}= require('./routerCreator');
+const { usernameToUserID } = require('../exportable_functions/minor_functions');
 
+//routes with no 'handledErrors' or 'response' properties 
+//those are added directly while concatenating with routes 
+const getMultipleItemsRoutes={
+    '/':{
+        function:async (req)=>await getCharacters(req,{'view_access':'public'}),
+        middleware:[queryToCharFilters]
+    },
+    '/characterList/my':{
+        function:async (req)=>await getCharacters(req,{"host":req.user}),
+        middleware:[authentificateViewPrivate,queryToCharFilters]
+    },
+    '/characterlist/:userID':{
+        function:async (req)=>{
+            const {userID}=req.params;
+            return await getCharacters(req,{"host":userID,view_access:'public'});
+        },
+        middleware:[queryToCharFilters]
+    },
+    '/characterlist/all':{
+        function:getCharacters,
+        middleware:[authentificateAdmin, queryToCharFilters]
+    },
+    '/characterlist/collection/:collectionID':{
+        function:async (req)=>{
+            const {collectionID} =req.params;
+            return await getCollectionCharacters(req,collectionID)
+        },
+        middleware:[authentificateViewPublic, queryToCharFilters]//authorise user?
+    },
 
-router.get('/', queryToCharFilters,async (req,res)=>{
-    getCharacters(req,res,{"view_access":"public"});
-});    
+    '/collectionlist/my':{
+        function:async (req)=>await getCollections(req,{'host':req.user}),
+        middleware:[authentificateViewPrivate],
+    },    
+    '/collectionlist/:userID':{
+        function:async (req)=>{
+            const {userID}=req.params
+            return await getCollections(req,{'host':usernameToUserID(userID),view_access:'public'});
+        },
+        middleware:[authentificateViewPublic],
+    },
+    '/collectionlist/all':{
+        function:getCollections,
+        middleware:[authentificateAdmin]
+    }
+}
+function addDefaultHandledErrorsAndGotItemsResponce(getMultipleItemsRoutes){
+    for (const item in getMultipleItemsRoutes) {
+        item.response=item.response||{
+            message: 'Items recieved',
+            fields:['totalItems','items']
+        };
+        item.handledErrors=item.handledErrors||{
+            404:'No Items found'
+        }
+    }
+}
 
-router.get('/characterlist/my', authentificateViewPrivate, queryToCharFilters, async (req,res)=>{
-    getCharacters(req,res,{"host":req.user});
-})
+const routes={
+    get:{
+    ...addDefaultHandledErrorsAndGotItemsResponce(getMultipleItemsRoutes),
+    '/collection/:collectionID':{
+        function: async (req)=>{
+            const {collectionID}=req.params;
+            return await getSingleCollection(req,{_id:collectionID})
+        },
+        middleware:{authentificateViewPublic},
+        handledErrors:{404:'Item not found'},
+        response:{
+            message:'Collection found',
+            fields:{item}
+        }
+    },
+    '/character/:charID':{
+        function: async (req)=>{
+            const {charID}=req.params;
+            return await getSingleChar(req,{_id:ObjectId(charID)})
+        },
+        middleware:{authentificateViewPublic},
+        handledErrors:{404:'Item not found'},
+        response:{
+            message:'Collection found',
+            fields:{item}
+        }
+    },
+}}
 
-router.get('/characterlist/:userID',authentificateViewPublic, queryToCharFilters,(req,res)=>{
-    let {userID}=req.params;
-    getCharacters(req,res,{"host":userID});
-})
-
-router.get('/characterlist/all',authentificateAdmin, queryToCharFilters, (req,res)=>{
-    getCharacters(req,res,{});
-})
-
-
-router.get('/characterlist/collection/:collectionID',authentificateViewPublic, queryToCharFilters, async (req,res)=>{
-    const {collectionID} = req.params;
-    getCollectionCharacters(req,res,collectionID);
-})
-
-router.get('/collectionlist/my',authentificateViewPrivate,async (req,res)=>{
-    let filter={"host":req.user};
-    getCollections(req,res,filter);
-})
-
-router.get('/collectionlist/:userID',authentificateViewPublic,async(req,res)=>{
-    const {userID}=req.params;
-    let filter={"host":userID};
-    getCollections(req,res,filter);
-})
-
-router.get('/collectionlist/all',authentificateAdmin,async (req,res)=>{
-    getCollections(req,res,{});
-})
-
-
-router.get('/collection/:collectionID',authentificateViewPublic,async (req,res)=>{
-    const {collectionID}=req.params;
-    const {item}= getSingleCollection(req,{_id:collectionID});
-    return res.status(200).send(item);
-})
-
-router.get('/character/:characterID',authentificateViewPublic,async(req,res)=>{    
-    const {characterID}=req.params;
-
-    const item= await getHandledResult(()=>getSingleChar(req,{_id:ObjectId(characterID)}),res)
-    if (item) return res.status(200).send(item.item);
-})
-
+const router=createRouter(routes)
 module.exports = router

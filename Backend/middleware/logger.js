@@ -13,7 +13,7 @@ async function logger(req,res,next){
 
     console.log(`${count}) ${req.method} ${req.path} `);
     res.on("finish", function() {    
-        console.log(`${count}) ${req.method} ${req.path} (${req.accessType}: ${req.user}): ${res.statusCode} ${res.statusMessage} ${Date.now()-starttime} ms`);
+        console.log(`${count}) ${req.method} ${req.path} (${req.accessType||'-'}: ${req.user||'no user'}): ${res.statusCode} ${res.statusMessage} ${Date.now()-starttime} ms`);
         // console.log(req.method, decodeURI(req.url), );
       });
     next();

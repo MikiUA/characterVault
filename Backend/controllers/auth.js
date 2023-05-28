@@ -47,7 +47,7 @@ exports.login= async (req)=>{
   }
 }
   
-exports.signup= async (req,res)=>{
+exports.signup= async (req)=>{
     const fullUsername=req.body.username,password=req.body.password,email=req.body.email;
     if(!fullUsername || !password || !email|| typeof(fullUsername)!=='string'|| typeof(email)!=='string') throw 400//bad request
     const username=usernameToUserID(fullUsername);
