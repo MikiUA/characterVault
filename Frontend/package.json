@@ -1,6 +1,6 @@
 {
-  "name": "my-chargen-front",
-  "version": "0.1.0",
+  "name": "char_vault-front",
+  "version": "0.3",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.10.6",
