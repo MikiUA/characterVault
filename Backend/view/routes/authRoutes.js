@@ -1,7 +1,7 @@
 
-const { authentificateEdit } = require('../middleware/authentificateUser');
-const { login, signup,signout, requestCheckUser } = require('../controllers/auth');
-const {createRouter,routeHandler} = require('./createRouter');
+const { authentificateEdit } = require('../../middleware/authentificateUser');
+const { login, signup,signout, requestCheckUser } = require('../../controllers/auth');
+const {routeHandler, createRouter} = require('../createRouter');
 
 const loginHandler=new routeHandler({
     function:login,

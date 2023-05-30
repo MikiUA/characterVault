@@ -1,45 +1,32 @@
-const jwt= require('jsonwebtoken');
-
-// const {MongoClient} = require('mongodb');
-const { ACCESS_TOKEN_VIEW,ACCESS_TOKEN_VIEW_EXPIERY_TIMER,ACCESS_TOKEN_EDIT } = require('../environmentVariables/accessTokens');
-const { usernameToUserID } = require('../exportable_functions/minor_functions');
+const { usernameToUserID } = require('../exportable_functions/usernameToUserID');
 const dbParams = require('../environmentVariables/dbParams');
+const { MongoFindOne, MongoCreateOne, MongoDeleteOne }=require('../model/databaseConnection')
+const { createViewEditTokens, createViewToken } = require('../model/authTokenHandler');
+const { MongoDeleteMany } = require('../model/dbFunctions/Delete');
 
-
-async function createViewEditTokens(username,mongoClient){//client that is already connected
-  let tokenCollection = await mongoClient.db(dbParams.DBname).collection(dbParams.collectionNames.sessionTokens);
-  try{
-    const viewToken=jwt.sign({username:username},ACCESS_TOKEN_VIEW, {expiresIn:ACCESS_TOKEN_VIEW_EXPIERY_TIMER});
-    const editToken=jwt.sign({username:username},ACCESS_TOKEN_EDIT).split('.')[2];//some sort of unique identifier
-    await tokenCollection.insertOne({
-      _id:editToken,
-      username:username
-    })//push edittoken in database
-    return {viewToken:viewToken,editToken:editToken};
-  }
-  catch(err) {throw err}; 
+function encryptPassword(password){
+  if (typeof(password)!=='string') throw 500;
+  return `encrypted ${password} lol`
 }
 
-exports.login= async (req)=>{
-  const fullUsername=req.body.username,password=req.body.password;
-  if(!fullUsername || !password || typeof(fullUsername)!=='string') throw (400)//bad request
+exports.login = async (req)=>{
+  const username=req.body.username,
+      password=req.body.password;
+  if(!username || !password || typeof(username)!=='string') throw (400)//bad request
  
-  const username=usernameToUserID(fullUsername);
-  // username=username.toLowerCase();
-
-  let mongoClient = req.mongoClient;//new MongoClient(dbParams.URI);
-
+  const userid=usernameToUserID(username);
   try {
-  //connect to user collection in db
-    // await mongoClient.connect()
-    let userCollection = mongoClient.db(dbParams.DBname).collection(dbParams.collectionNames.users);
-
+  //find user in db
+    const user= await MongoFindOne({
+      collectionName:dbParams.collectionNames.users,
+      filter:{_id:userid,password:encryptPassword(password)},
+      mongoClient:req.mongoClient
+    })
   //if user is not existing or password does not match the user return 401
-    let existing = await userCollection.findOne({_id:username,password:password});
-    if (existing===null) {throw (401)}
+    if (!user) throw (401);//unauthorised
 
   //if user is existing create and return view and edit tokens
-    let {viewToken,editToken}=await createViewEditTokens(username, mongoClient);
+    let {viewToken,editToken}=await createViewEditTokens({userid},req.mongoClient);
     return {viewToken,editToken};
   }
   catch (err){
@@ -47,72 +34,91 @@ exports.login= async (req)=>{
   }
 }
   
-exports.signup= async (req)=>{
-    const fullUsername=req.body.username,password=req.body.password,email=req.body.email;
-    if(!fullUsername || !password || !email|| typeof(fullUsername)!=='string'|| typeof(email)!=='string') throw 400//bad request
-    const username=usernameToUserID(fullUsername);
-  //TODO: check username to not be one of the reserved words, and if so return 400 or 403
+exports.signup = async (req)=>{
+//TODO: check username to not be one of the reserved words, and if so return 400
+  const username=req.body.username,
+    password=req.body.password,
+    email=req.body.email;
+  if(!username || !password ||!email|| typeof(username)!=='string'|| typeof(email)!=='string') throw (400)//bad request
+  const userid=usernameToUserID(username);
 
-    let mongoClient = req.mongoClient;//new MongoClient(dbParams.URI);
+  try {
+    const user= await MongoFindOne({
+      collectionName:dbParams.collectionNames.users,
+      filter:{_id:userid},
+      mongoClient:req.mongoClient
+    })
+    if (user) throw 403//username taken
+      
+  //TODO: check email taken
+  //TODO: check if email valid?
 
-    try {
-    //connect to user collection in db
-      // await mongoClient.connect();
-    // console.log("connected");
-      let userCollection = mongoClient.db(dbParams.DBname).collection(dbParams.collectionNames.users);
-
-    //if username is taken 403
-      let existing = await userCollection.findOne({_id:username});
-      if (existing!==null){throw 403}  
-          
-    //TODO: if not taken check email and stuff
-
-    //push user in database
-      await userCollection.insertOne({
-        _id:username,
-        username:fullUsername,
-        password:password,
+  //push user in database
+    await MongoCreateOne({
+      mongoClient:req.mongoClient,
+      collectionName:dbParams.collectionNames.users,
+      item:{
+        _id:userid,
+        username:username,
+        password:encryptPassword(password),
         email:email,
         verified:false,
         date_created:Date.now()
-      })
+      }
+    })
 
-    //create and return view and edit tokens
-    let {viewToken,editToken}=await createViewEditTokens(username, mongoClient);
+  //create and return view and edit tokens
+    let {viewToken,editToken}=await createViewEditTokens({userid}, req.mongoClient);
     return {viewToken,editToken};
-    }
-    catch(err) {throw err}
+  }
+    catch (err) { throw err; }
 }
 
-exports.requestCheckUser= async (req)=>{
+exports.requestCheckUser = async (req)=>{
   try{
-    // const mongoClient = req.mongoClient;
-    let userCollection = req.mongoClient.db(dbParams.DBname).collection(dbParams.collectionNames.users);
-    //find the user whose token we already checked
-    let user_data = await userCollection.findOne({_id:req.user});
-    if (!user_data) throw 401
-    let returnedUser={
-      userid:user_data._id,
-      username:user_data.username,
-      email:user_data.email,
-      profile_picture:user_data.profile_picture||null,
-      availible_collections:user_data.availible_collections||[]
+    const user=MongoFindOne({
+      collectionName:dbParams.collectionNames.users,
+      mongoClient:req.mongoClient,
+      filter:{_id:req.user}
+    })
+
+    if (!user) throw 401
+    const returnedUser={
+      _id:user._id,
+      username:user.username,
+      email:user.email,
+      profile_picture:user.profile_picture||null,
+      availible_collections:user.availible_collections||[]
     }
     if (user_data.isAdmin) returnedUser.isAdmin=true;
 
-    // console.log(user_data);
-    const viewToken=jwt.sign({username:req.user},ACCESS_TOKEN_VIEW, {expiresIn:ACCESS_TOKEN_VIEW_EXPIERY_TIMER});
+    // console.log(user);
+    const viewToken=createViewToken({userid:user._id})
     return{
       viewToken:viewToken,
       user:returnedUser
     };
   }
-  catch (err){
-    throw err
-  }
+  catch (err){ throw err; }
 }
 
-exports.signout=async (request,isSingleToken)=>{
+exports.signout=async (req,isSingleToken)=>{
+  if(isSingleToken){
+    const authHeader=req.headers['authorization'];
+    const authtoken=authHeader && authHeader.split(' ')[1];
+    return await MongoDeleteOne({
+      mongoClient:req.mongoClient,
+      collectionName:dbParams.collectionNames.sessionTokens,
+      filter:{_id:authtoken}
+    });
+  }
+  else {
+    return await MongoDeleteMany({
+      mongoClient:req.mongoClient,
+      collectionName:dbParams.collectionNames.sessionTokens,
+      filter:{userid:req.user}
+    });
+  }
     // let mongoClient = new MongoClient(dbParams.URI);
     // try {
     // let userDB = await mongoClient.connectDB(databaseName).collection(collectionNames.users);// if not works  then const = await mongoClient.connect() and then const.db(databaseName)

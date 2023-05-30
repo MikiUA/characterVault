@@ -45,5 +45,4 @@ const routes={
 }
 
 const router=createRouter(routes,authentificateEdit);
-
 module.exports = router

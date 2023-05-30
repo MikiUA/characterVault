@@ -4,22 +4,13 @@ const PORT=8081;
 
 const logger = require('./middleware/logger');
 const cors = require('./middleware/cors');
-
-const authRouter = require('./routes/authRoutes');
-const galleryEditRouter = require('./routes/galleryEditRoutes');
-const galleryViewRouter = require('./routes/galleryViewRoutes');
-const userRouter = require('./routes/userRoutes');
-
+const router = require('./view/router');
 
 app.use(express.json());
 app.use(logger);
 app.use(cors);
 
-
-app.use('/gallery',galleryViewRouter);
-app.use('/gallery',galleryEditRouter);
-app.use('/auth',authRouter);
-app.use('/user',userRouter);
+app.use(router);
 
 
 app.get('/',(req,res)=>{
