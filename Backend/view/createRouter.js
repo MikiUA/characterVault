@@ -21,7 +21,7 @@ exports.routeHandler=class{
       fields:[]
     }
   }){
-    for (field in newHandler){
+    for (const field in newHandler){
       this[field]=newHandler[field]
     }
   }
@@ -30,7 +30,7 @@ exports.routeHandler=class{
 function createRoute(route, handler) {
   const { function: routeHandler=()=>{}, handledErrors={},middleware:middlewareHandler=[], response={} } = handler;
 
-  router[route.method](route.path,useDB,...middlewareHandler, async (req, res) => {
+  router[route.method](route.path,useDB,...((Array.isArray(middlewareHandler) && middlewareHandler)||[]), async (req, res) => {
     try {
       const result = await routeHandler(req);
       const { status = 200, message = 'ok', fields = [] } = response;

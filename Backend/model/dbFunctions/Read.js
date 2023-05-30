@@ -1,4 +1,3 @@
-const dbParams=require('../environmentVariables/dbParams');
 const {disconnectClient, checkClient, getConnectedClientAndCollection}=require('./handlers')
 
 exports.MongoFindMany=async ({

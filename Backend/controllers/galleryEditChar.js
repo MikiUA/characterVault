@@ -1,6 +1,7 @@
 const { ObjectID } = require('bson');
-const { usernameToUserID } = require('../exportable_functions/minor_functions');
+const { usernameToUserID } = require('../exportable_functions/usernameToUserID');
 const dbParams = require('../environmentVariables/dbParams');
+const { MongoInsertOne, MongoReplaceOne, MongoFindOne } = require('../model/databaseConnection');
 
 function checkDefaultNewCharacterFields(char={}){
     let updatedChar={
@@ -30,10 +31,13 @@ async function newCharacter(req){
         newChar.host=usernameToUserID(req.user);
         newChar.date_created=Date.now();
         newChar.date_modified=Date.now();
-        const charDB=req.mongoClient.db(dbParams.DBname).collection(dbParams.collectionNames.characters);
 
-        await charDB.insertOne(newChar);
-        return {success:true};
+        const newCharacter=await MongoInsertOne({
+            mongoClient:req.mongoClient,
+            collectionName:dbParams.collectionNames.characters,
+            item:newChar
+        })
+        return {newCharacter};
     }
     catch (error){throw error }
 
@@ -42,18 +46,28 @@ async function newCharacter(req){
 async function replaceCharacter(req){
     try {
         const {charID}=req.params;
-        const charDB=req.mongoClient.db(dbParams.DBname).collection(dbParams.collectionNames.characters);
-        const lastChar=await charDB.findOne({_id:ObjectID(charID)});
-        if (!lastChar) throw {status:400,message:'No character with your identifier matched the existing database'};
+        const lastChar=await MongoFindOne({
+            collectionName:dbParams.collectionNames.characters,
+            mongoClient:req.mongoClient,
+            filter:{_id:ObjectID(charID)}
+        });
+
+        if (!lastChar) throw {status:404,message:'No character with your identifier matched the existing database'};
 
         let newChar=checkDefaultNewCharacterFields(req.body);
         newChar._id=lastChar._id;
-        newChar.host=usernameToUserID(req.user);
+        newChar.host=lastChar.host;
         newChar.date_created=lastChar.date_created
         newChar.date_modified=Date.now();
         
-        await charDB.replaceOne({_id:ObjectID(charID)},newChar);
-        return {success:true}
+        const newCharacter=await MongoReplaceOne({
+            mongoClient:req.mongoClient,
+            collectionName:dbParams.collectionNames.characters,
+            filter:{_id:ObjectID(charID)},
+            item:newChar
+        });
+
+        return {newCharacter};
     }
     catch (error){throw error }
 }

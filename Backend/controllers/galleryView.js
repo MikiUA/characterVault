@@ -1,7 +1,7 @@
 const express= require('express');
 const router=express.Router();
 // const {MongoClient, ObjectId} = require('mongodb');
-const {MongoFindMany, MongoFindOne} =require('../exportable_functions/databaseConnection');
+const {MongoFindMany, MongoFindOne} =require('../model/databaseConnection');
 const dbParams = require('../environmentVariables/dbParams');
 
 

@@ -1,7 +1,7 @@
-const { authentificateViewPublic, authentificateEdit, authentificateAdmin } = require('../middleware/authentificateUser');
-const { getUserByID } = require('../controllers/user');
+const { authentificateViewPublic, authentificateEdit, authentificateAdmin } = require('../../middleware/authentificateUser');
+const { getUserByID } = require('../../controllers/user');
 
-const { routeHandler, createRouter } = require('./createRouter');
+const { routeHandler, createRouter } = require('../createRouter');
 
 const notImplementedHandler={
     function:async (req)=>{throw {status:501,message:'Feature under development'}}

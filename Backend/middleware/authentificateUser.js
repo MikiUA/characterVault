@@ -1,6 +1,6 @@
 const {verifyEditToken,verifyViewToken}=require('../model/authTokenHandler');
 
-function getToken(req);{
+function getToken(req){
     const authHeader=req.headers['authorization'];
     const authtoken=authHeader && authHeader.split(' ')[1];
     return authtoken

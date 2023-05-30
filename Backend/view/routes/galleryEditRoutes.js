@@ -1,7 +1,7 @@
-const { authentificateEdit } = require('../middleware/authentificateUser');
-const { newCharacter, replaceCharacter } = require('../controllers/galleryEditChar');
+const { authentificateEdit } = require('../../middleware/authentificateUser');
+const { newCharacter, replaceCharacter } = require('../../controllers/galleryEditChar');
 
-const { createRouter, routeHandler } = require('./createRouter');
+const { createRouter, routeHandler } = require('../createRouter');
 
 const newCharHandler=new routeHandler({
     handledErrors:[400],

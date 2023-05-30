@@ -1,5 +1,5 @@
 const { dbParams } = require("../environmentVariables/dbParams");
-const { MongoFindOne } = require("../exportable_functions/databaseConnection");
+const { MongoFindOne } = require("../model/databaseConnection");
 
 async function getUserByID(req,userID){
     const {item} = await MongoFindOne({

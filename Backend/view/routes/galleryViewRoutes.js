@@ -1,10 +1,10 @@
-const { getCharacters,getCollections, getCollectionCharacters, getSingleCollection, getSingleChar } = require('../controllers/galleryView');
-const { queryToCharFilters } = require('../middleware/queryToCharFilters');
-const { authentificateViewPrivate, authentificateAdmin, authentificateViewPublic } = require('../middleware/authentificateUser');
+const { getCharacters,getCollections, getCollectionCharacters, getSingleCollection, getSingleChar } = require('../../controllers/galleryView');
+const { queryToCharFilters } = require('../../middleware/queryToCharFilters');
+const { authentificateViewPrivate, authentificateAdmin, authentificateViewPublic } = require('../../middleware/authentificateUser');
 
 const { ObjectId } = require('mongodb');
-const {createRouter}= require('./routerCreator');
-const { usernameToUserID } = require('../exportable_functions/minor_functions');
+const {createRouter}= require('../createRouter');
+const { usernameToUserID } = require('../../exportable_functions/usernameToUserID');
 
 //routes with no 'handledErrors' or 'response' properties 
 //those are added directly while concatenating with routes 
@@ -72,11 +72,11 @@ const routes={
             const {collectionID}=req.params;
             return await getSingleCollection(req,{_id:collectionID})
         },
-        middleware:{authentificateViewPublic},
+        middleware:[authentificateViewPublic],
         handledErrors:{404:'Item not found'},
         response:{
             message:'Collection found',
-            fields:{item}
+            fields:['item']
         }
     },
     '/character/:charID':{
@@ -84,11 +84,11 @@ const routes={
             const {charID}=req.params;
             return await getSingleChar(req,{_id:ObjectId(charID)})
         },
-        middleware:{authentificateViewPublic},
+        middleware:[authentificateViewPublic],
         handledErrors:{404:'Item not found'},
         response:{
             message:'Collection found',
-            fields:{item}
+            fields:['item']
         }
     },
 }}
