@@ -35,5 +35,4 @@ const routes={
     }
 }
 
-const router=createRouter(routes);
-module.exports = router
+module.exports = routes

@@ -6,18 +6,19 @@ async function deleteOne({
         filter
         // itemType?:oneOf [character,collection/workflow,user,token]
     }){
-    if (!filter ||typeof('filter')!=='object') throw 400;
+    if (!filter || typeof(filter)!=='object') throw 400;
 
-    return await MongoDO(mongoClient,collectionName,'deleteOne',[filter])
-    // try {
-    //     const {collection:itemCollection,connectedClient}=await getConnectedClientAndCollection(mongoClient,collectionName); 
+    // return await MongoDO(mongoClient,collectionName,'deleteOne',[filter])
+    try {
+        const {collection:itemCollection,connectedClient}=await getConnectedClientAndCollection(mongoClient,collectionName); 
 
-    //     const result=await itemCollection.deleteOne(filter)
+        const result=await itemCollection.deleteOne(filter)
 
-    //     if (!checkClient(mongoClient)) disconnectClient(connectedClient);
-    //     return result
-    // }
-    // catch (err) { throw err; }
+        if (!result || !result.acknowledged || !result.deletedCount) return null;
+        if (!checkClient(mongoClient)) disconnectClient(connectedClient);
+        return result
+    }
+    catch (err) { throw err; }
 }
 async function deleteMany({
         mongoClient,
@@ -25,7 +26,7 @@ async function deleteMany({
         filter
         // itemType?:oneOf [character,collection/workflow,user,token]
     }){
-    if (!filter ||typeof('filter')!=='object') throw 400;
+    if (!filter ||typeof(filter)!=='object') throw 400;
     return await MongoDO(mongoClient,collectionName,'deleteMany',[filter])
 }
 

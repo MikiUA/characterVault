@@ -24,7 +24,7 @@ async function getConnectedClient(mongoClient){
     return newClient
 }
 async function getConnectedClientAndCollection(mongoClient,collectionName){
-    if (collectionName) throw new Error('collection name has to be passed')
+    if (!collectionName) throw new Error('collection name has to be passed')
     const connectedClient=await getConnectedClient(mongoClient);
     const collection=connectedClient.db(dbParams.DBname).collection(collectionName);
     return {collection,connectedClient};

@@ -1,7 +1,6 @@
-const { authentificateEdit } = require('../../middleware/authentificateUser');
-const { newCharacter, replaceCharacter } = require('../../controllers/galleryEditChar');
+const { newCharacter, replaceCharacter, deleteCharacter } = require('../../controllers/galleryEditChar');
 
-const { createRouter, routeHandler } = require('../createRouter');
+const { routeHandler } = require('../createRouter');
 
 const newCharHandler=new routeHandler({
     handledErrors:[400],
@@ -19,6 +18,14 @@ const editCharHandler = new routeHandler({
         status:201,
         message:'Success',
         fields:['newCharacter']
+    }
+})
+const deleteCharHandler = new routeHandler({
+    handledErrors:{404:'No character with your identifier matched the existing database' },
+    function:deleteCharacter,
+    response:{
+        status:200,
+        message:'Deleted',
     }
 })
 const notImplementedHandler={
@@ -39,10 +46,10 @@ const routes={
         '/collection/:collectionID':notImplementedHandler,
     },
     delete:{
-        '/character/:charID':notImplementedHandler,
+        '/character/:charID':deleteCharHandler,
         '/collection/:collectionID':notImplementedHandler,        
     }
 }
 
-const router=createRouter(routes,authentificateEdit);
-module.exports = router
+// const router=createRouter(routes,authentificateEdit);
+module.exports = routes

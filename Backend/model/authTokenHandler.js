@@ -4,7 +4,7 @@ const dbParams = require("../environmentVariables/dbParams");
 const { MongoCreateOne, MongoFindOne } = require("./databaseConnection");
 
 exports.createViewToken=({userid,device='unhandled'})=>{
-    const viewToken=jwt.sign({userid:userid},ACCESS_TOKEN_VIEW, {expiresIn:ACCESS_TOKEN_VIEW_EXPIERY_TIMER});
+    const viewToken=jwt.sign({userid,device},ACCESS_TOKEN_VIEW, {expiresIn:ACCESS_TOKEN_VIEW_EXPIERY_TIMER});
     return viewToken
 }
 
@@ -15,7 +15,7 @@ exports.createEditToken=async({userid,device='unhandled'},mongoClient)=>{
         collectionName:dbParams.collectionNames.sessionTokens,
         item:{
             _id:editToken,
-            userid:userid
+            userid,device
         }
     })
     return editToken

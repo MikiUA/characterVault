@@ -62,6 +62,7 @@ function addDefaultHandledErrorsAndGotItemsResponce(getMultipleItemsRoutes){
             404:'No Items found'
         }
     }
+    return getMultipleItemsRoutes
 }
 
 const routes={
@@ -93,5 +94,4 @@ const routes={
     },
 }}
 
-const router=createRouter(routes)
-module.exports = router
+module.exports = routes

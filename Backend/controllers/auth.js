@@ -3,13 +3,14 @@ const dbParams = require('../environmentVariables/dbParams');
 const { MongoFindOne, MongoCreateOne, MongoDeleteOne }=require('../model/databaseConnection')
 const { createViewEditTokens, createViewToken } = require('../model/authTokenHandler');
 const { MongoDeleteMany } = require('../model/dbFunctions/Delete');
+const {user:userClass}=require('../schemas/userClass');
 
 function encryptPassword(password){
   if (typeof(password)!=='string') throw 500;
   return `encrypted ${password} lol`
 }
 
-exports.login = async (req)=>{
+const login = async (req=new Request)=>{
   const username=req.body.username,
       password=req.body.password;
   if(!username || !password || typeof(username)!=='string') throw (400)//bad request
@@ -23,10 +24,12 @@ exports.login = async (req)=>{
       mongoClient:req.mongoClient
     })
   //if user is not existing or password does not match the user return 401
-    if (!user) throw (401);//unauthorised
+    if (!user) throw 404;//not found
 
   //if user is existing create and return view and edit tokens
-    let {viewToken,editToken}=await createViewEditTokens({userid},req.mongoClient);
+  
+    const device=req.get('User-Agent');
+    let {viewToken,editToken}=await createViewEditTokens({userid,device},req.mongoClient);
     return {viewToken,editToken};
   }
   catch (err){
@@ -34,7 +37,7 @@ exports.login = async (req)=>{
   }
 }
   
-exports.signup = async (req)=>{
+const signup = async (req)=>{
 //TODO: check username to not be one of the reserved words, and if so return 400
   const username=req.body.username,
     password=req.body.password,
@@ -68,31 +71,24 @@ exports.signup = async (req)=>{
     })
 
   //create and return view and edit tokens
-    let {viewToken,editToken}=await createViewEditTokens({userid}, req.mongoClient);
+    const device=req.get('User-Agent');
+    let {viewToken,editToken}=await createViewEditTokens({userid,device}, req.mongoClient);
     return {viewToken,editToken};
   }
     catch (err) { throw err; }
 }
 
-exports.requestCheckUser = async (req)=>{
+const requestCheckUser = async (req)=>{
   try{
-    const user=MongoFindOne({
+    const user=await MongoFindOne({
       collectionName:dbParams.collectionNames.users,
       mongoClient:req.mongoClient,
       filter:{_id:req.user}
     })
 
-    if (!user) throw 401
-    const returnedUser={
-      _id:user._id,
-      username:user.username,
-      email:user.email,
-      profile_picture:user.profile_picture||null,
-      availible_collections:user.availible_collections||[]
-    }
-    if (user_data.isAdmin) returnedUser.isAdmin=true;
+    if (!user) throw 401;
 
-    // console.log(user);
+    const returnedUser=userClass.getReturnable(new userClass(user),true);
     const viewToken=createViewToken({userid:user._id})
     return{
       viewToken:viewToken,
@@ -102,15 +98,19 @@ exports.requestCheckUser = async (req)=>{
   catch (err){ throw err; }
 }
 
-exports.signout=async (req,isSingleToken)=>{
+const signout=async (req,isSingleToken)=>{
+  const {device}=req.query;
   if(isSingleToken){
     const authHeader=req.headers['authorization'];
     const authtoken=authHeader && authHeader.split(' ')[1];
-    return await MongoDeleteOne({
+    const filter=device?{device:device}:{_id:authtoken};
+    const result= await MongoDeleteOne({
       mongoClient:req.mongoClient,
       collectionName:dbParams.collectionNames.sessionTokens,
-      filter:{_id:authtoken}
+      filter:filter
     });
+    if (!result) throw 404
+    return 'success';
   }
   else {
     return await MongoDeleteMany({
@@ -137,3 +137,5 @@ exports.signout=async (req,isSingleToken)=>{
     //   mongoClient.close();
     throw {message:"signout not supported"}
 }
+
+module.exports={login,signup,signout,requestCheckUser}

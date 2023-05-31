@@ -1,36 +1,16 @@
-const { ObjectID } = require('bson');
-const { usernameToUserID } = require('../exportable_functions/usernameToUserID');
 const dbParams = require('../environmentVariables/dbParams');
-const { MongoInsertOne, MongoReplaceOne, MongoFindOne } = require('../model/databaseConnection');
+const { ObjectId } = require('mongodb');
+const { MongoInsertOne, MongoReplaceOne, MongoFindOne, MongoDeleteOne } = require('../model/databaseConnection');
 
-function checkDefaultNewCharacterFields(char={}){
-    let updatedChar={
-        'additional params':char['additional params'] || {}
-    };
-    updatedChar.is_DnD=(char.is_DnD==='true'||char.is_DnD===true)?true:false;
-    updatedChar.view_access=char.view_access==='public'?'public':'private';
-    //check img_url is actually an image;
-    updatedChar.img_url=char.img_url;
-    updatedChar.refname=(typeof(char.refname)==='string' && char.refname.length<50)?char.refname:'';
-    if (!char.shname || typeof(char.shname)!=='string' || char.shname.length>15) throw {status:400,message:'character short name must be a string no longer than 15 symbols'};
-    updatedChar.shname = char.shname;
-    updatedChar.fname=(typeof(char.fname)==='string' && char.fname.length<50)?char.fname:updatedChar.shname; 
-    
-    if (!char.description || typeof(char.description)!=='string') throw {status:400,message:'character description string must be included'};
-    updatedChar.description = char.description;
-    
-    if (char.sex && (char.sex==='m' || char.sex === 'f' || char.sex === 'other')) updatedChar.sex=char.sex;
-    //check if main_color is actually a color
-    updatedChar.main_color=char.main_color||'#f9f9f9'
-    return updatedChar;
-}
+const { usernameToUserID } = require('../exportable_functions/usernameToUserID');
+const {character,characterGenerationError}=require('../schemas/characterClass');
 
 async function newCharacter(req){
     try {
-        let newChar=checkDefaultNewCharacterFields(req.body);
-        newChar.host=usernameToUserID(req.user);
-        newChar.date_created=Date.now();
-        newChar.date_modified=Date.now();
+        const newChar=new character({
+            ...req.body,
+            host:usernameToUserID(req.user)
+        })
 
         const newCharacter=await MongoInsertOne({
             mongoClient:req.mongoClient,
@@ -46,30 +26,49 @@ async function newCharacter(req){
 async function replaceCharacter(req){
     try {
         const {charID}=req.params;
+        if (!ObjectId.isValid(charID)) throw 404
         const lastChar=await MongoFindOne({
             collectionName:dbParams.collectionNames.characters,
             mongoClient:req.mongoClient,
-            filter:{_id:ObjectID(charID)}
+            filter:{_id:ObjectId(charID)}
         });
 
         if (!lastChar) throw {status:404,message:'No character with your identifier matched the existing database'};
 
-        let newChar=checkDefaultNewCharacterFields(req.body);
-        newChar._id=lastChar._id;
-        newChar.host=lastChar.host;
-        newChar.date_created=lastChar.date_created
-        newChar.date_modified=Date.now();
+        let newChar=new character({
+            ...lastChar,...req.body
+        });
         
         const newCharacter=await MongoReplaceOne({
             mongoClient:req.mongoClient,
             collectionName:dbParams.collectionNames.characters,
-            filter:{_id:ObjectID(charID)},
+            filter:{_id:ObjectId(charID)},
             item:newChar
         });
 
         return {newCharacter};
     }
-    catch (error){throw error }
+    catch (error){
+        if (error===characterGenerationError) throw 400
+        throw error }
+}
+async function deleteCharacter(req){
+    try {
+        const {charID}=req.params;
+        if (!ObjectId.isValid(charID)) throw 404
+
+        const lastChar=await MongoDeleteOne({
+            collectionName:dbParams.collectionNames.characters,
+            mongoClient:req.mongoClient,
+            filter:{_id:ObjectId(charID)}
+        });
+
+        if (!lastChar) throw 404;
+        return {response:lastChar};
+    }
+    catch (error){
+        if (error===characterGenerationError) throw 400
+        throw error }
 }
 
-module.exports={newCharacter,replaceCharacter}
+module.exports={newCharacter,replaceCharacter,deleteCharacter}

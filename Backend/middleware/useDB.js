@@ -8,10 +8,11 @@ function closeMongoClient(mongoClient){
 function isConnected(client) {
   return !!client && !!client.topology && client.topology.isConnected()
 }
-function logC(mongoClient=MongoClient){
+function logC(mongoClient){
   console.log(isConnected(mongoClient))
 }
 async function useDB(req,res,next){
+    
     const mongoClient = new MongoClient(dbParams.URI);
     try {
       // console.error("NOT connected");

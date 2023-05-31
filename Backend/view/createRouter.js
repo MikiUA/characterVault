@@ -2,7 +2,7 @@ const express = require('express');
 const useDB = require('../middleware/useDB');
 const router = express.Router();
 
-exports.routeHandler=class{
+class routeHandler{
   handledErrors={};
   function=async (req)=>{};
   middleware=[];
@@ -27,12 +27,15 @@ exports.routeHandler=class{
   }
 }
 
-function createRoute(route, handler) {
-  const { function: routeHandler=()=>{}, handledErrors={},middleware:middlewareHandler=[], response={} } = handler;
+function createRoute(route, handler,additionalMiddleware) {
+  const { function: routeHandlerFunction=()=>{}, handledErrors={},middleware:middlewareHandler=[], response={} } = (
+    (handler instanceof routeHandler && handler)||new routeHandler(handler)
+    );
 
-  router[route.method](route.path,useDB,...((Array.isArray(middlewareHandler) && middlewareHandler)||[]), async (req, res) => {
-    try {
-      const result = await routeHandler(req);
+  // console.log(`${route.method} ${route.path} , `,[...additionalMiddleware,...middlewareHandler]);   
+  router[route.method](route.path,...additionalMiddleware,...((Array.isArray(middlewareHandler) && middlewareHandler)||[]), async (req, res) => {
+    try { 
+      const result = await routeHandlerFunction(req);
       const { status = 200, message = 'ok', fields = [] } = response;
       const responseData = fields.reduce((data, field) => {
         if (result[field] !== undefined) {
@@ -46,13 +49,13 @@ function createRoute(route, handler) {
         try {
             //this block goes for errors handled by devs
             if (err.status && err.message) {
-                return res.status(err.status).send({message:er.message});
+                return res.status(err.status).send({message:err.message});
             }//if a developer is confident enough to throw both status and message i think he know what he does
 
-             const errorStatus=(typeof(err)==='number' && err)||err.status||500;
+            const errorStatus=(typeof(err)==='number' && err)||err.status||500;
 
             if (Array.isArray(handledErrors) && handledErrors.includes(errorStatus)) return res.sendStatus(err);
-            if (Object.keys(handledErrors).includes(errorStatus)) return res.status(errorStatus).send({message:handledErrors[err]});
+            if (Object.keys(handledErrors).includes(String(errorStatus))) return res.status(errorStatus).send({message:handledErrors[err]});
             throw err;
         }
         catch (err) {
@@ -64,24 +67,29 @@ function createRoute(route, handler) {
   });
 }
 
-exports.createRouter=(routes,somethingToUse=[])=>{
-  if(somethingToUse){
+const createRouter=({routes,additionalMiddleware=[],parentPath=''})=>{
+  function prepareAdditionalMiddleware(somethingToUse){
+    if (!somethingToUse) return null;
+    if (typeof(somethingToUse)==='function') return [somethingToUse];
     if (Array.isArray(somethingToUse)) {
+      let array=[];
       for (const something in somethingToUse) {
-        if (typeof(somethingToUse)!=='function') continue
-        router.use(something);
+        if (typeof(somethingToUse)==='function') array.push(something);
       }
+      return array;
     }
-    if (typeof(somethingToUse)==='function') router.use(somethingToUse);
   }
-
+  const additionalMiddlewareArray=[useDB,...prepareAdditionalMiddleware(additionalMiddleware)];
+  
   for (const method in routes) {
     const routesObj = routes[method];
     for (const path in routesObj) {
       const handler = routesObj[path];
-      createRoute({ method, path }, handler);
+      // const middleware=handler.middleware;
+      // handler.middleware=middleware;
+      createRoute({ method, path:parentPath+path }, handler,additionalMiddlewareArray);
     }
   }
   return router
 }
-// module.exports={createRouter,routeHandler}
+module.exports={createRouter,routeHandler}

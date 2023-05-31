@@ -7,7 +7,7 @@ const loginHandler=new routeHandler({
     function:login,
     handledErrors:{
         400:"Please provide valid 'username' and 'password'",
-        401:"User not found"
+        404:"User not found"
     },
     response:{
         message:'Login success',
@@ -29,6 +29,7 @@ const registerHandler=new routeHandler({
 })
 
 const signoutHandler=(fromAllDevices=false)=>new routeHandler({
+    handledErrors:{404:'Device not found'},
     middleware:[authentificateEdit],
     function:async (req)=>{
         return await signout(req,!fromAllDevices)
@@ -45,6 +46,10 @@ const checkUserHandler=new routeHandler({
     }
 })
 
+const notImplementedHandler={
+    function:async (req)=>{throw {status:501,message:'Feature under development'}}
+};
+
 const routes={
     post:{
         '/login':loginHandler,
@@ -56,10 +61,12 @@ const routes={
         '/requestCheckUser':checkUserHandler,
         '/signout':signoutHandler(),
         '/logout':signoutHandler(),
+        '/signout/:device':notImplementedHandler,
+        '/logout/:device':notImplementedHandler,
         '/signoutFromAll':signoutHandler(true),
         '/logoutFromAll':signoutHandler(true),
     }
 }
 
-const router=createRouter(routes)
-module.exports = router
+// const router=createRouter(routes)
+module.exports = routes
