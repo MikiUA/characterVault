@@ -1,0 +1,7 @@
+DEVMODE=true
+PORT=0000
+DB_URI = 'mongodb://localhost:0000/'
+
+ACCESS_TOKEN_VIEW = '';
+ACCESS_TOKEN_EDIT = '';
+ACCESS_TOKEN_VIEW_EXPIERY_TIMER = '1s';
