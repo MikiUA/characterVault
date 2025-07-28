@@ -1,23 +1,24 @@
 {
-  "name": "char_vault-backend",
-  "version": "0.3",
-  "description": "",
-  "main": "index.js",
+  "name": "gallery-back",
+  "version": "0.5",
+  "main": "server.js",
+  "author": "MikiUA",
+  "license": "MIT",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "devStart": "nodemon server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "jsonwebtoken": "^8.5.1",
-    "mongodb": "^4.11.0"
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.8.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "dotenv": "^16.0.3",
-    "nodemon": "^2.0.20"
+    "dotenv": "^16.4.5",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
   }
 }

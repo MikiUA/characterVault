@@ -1,7 +1,7 @@
 import React from "react";
 import { ErrorOverlay } from "components/components-general/Overlay";
 
-class ErrorBoundary extends React.Component {
+class ErrorBoundary extends React.Component { //CopyPasted (mostly) code from some official source
   constructor(props) {
     super(props);
     this.state = { Error: null };

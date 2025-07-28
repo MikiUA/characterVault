@@ -1,0 +1,15 @@
+const COLLECTION = require("../../entities/COLLECTION");
+const { ValidationError } = require("../../entities/ERROR");
+const dbParams = require("../../env/dbParams");
+const { MongoCreateOne } = require("../../model/databaseConnection");
+
+async function newColl(req) {
+    const name = req.body.name, host = req.user;
+    if (typeof (!name) !== 'string') throw new ValidationError('Please input name to create a collection');
+    const newColl = new COLLECTION({ ...req.body, host: host })
+    return await MongoCreateOne({
+        mongoClient: req.mongoClient,
+        collectionName: dbParams.collectionNames.workflows,
+        item: newColl
+    })
+}

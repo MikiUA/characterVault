@@ -1,41 +1,19 @@
-const express = require('express');
-const router = express.Router();
+const { docs, router, handlePaths } = require('./createRDT');
+const swaggerUi = require("swagger-ui-express");
+const { characterPaths, collectionPaths, userPaths } = require('./routes/galleryPath');
 
-const authRoutes = require('./routes/authRoutes');
-const galleryEditRoutes = require('./routes/galleryEditRoutes');
-const galleryViewRoutes = require('./routes/galleryViewRoutes');
-const userRoutes = require('./routes/userRoutes');
-const { createRouter } = require('./createRouter');
-const { authentificateEdit } = require('../middleware/authentificateUser');
+handlePaths(require('./routes/authPaths'), '/auth', 'Authentification');
+handlePaths(characterPaths, '/gallery', 'Gallery Characters');
+handlePaths(collectionPaths, '/gallery', 'Gallery Collections');
+handlePaths(userPaths, '/users', 'Users')
 
-router.use(createRouter({
-    routes:authRoutes,
-    parentPath:'/auth'
-}))
-router.use(createRouter({
-    routes:userRoutes,
-    parentPath:'/user'
-}))
-router.use(createRouter({
-    parentPath:'/gallery',
-    routes:galleryEditRoutes,
-    additionalMiddleware:authentificateEdit
-}))
-router.use(createRouter({
-    parentPath:'/gallery',
-    routes:galleryViewRoutes
-}))
+router.use(
+    "/",
+    swaggerUi.serve,
+    swaggerUi.setup(docs, { filter: true })
+);
+router.use(
+    "/doc", (req, res) => res.send(docs)
+);
 
-// const routes={
-//     '/gallery':{...galleryViewRoutes,...galleryEditRoutes},
-//     '/auth':authRoutes,
-//     '/user':userRoutes
-// }
-// router.use(createRouter(routes))
-
-// router.use('/gallery',createRouter(galleryViewRouter));
-// router.use('/gallery',createRouter(galleryEditRouter,authentificateEdit));
-// router.use('/auth',createRouter(authRouter));
-// router.use('/user',createRouter(userRouter));
-
-module.exports=router
+module.exports = router

@@ -1,22 +1,18 @@
-const { disconnectClient, checkClient,getConnectedClientAndCollection } = require("./handlers");
+const { getConnectedCollection } = require("./handlers");
 
-async function AddOne({
-        mongoClient,
-        collectionName,
-        item,
-        // itemType?:oneOf [character,collection/workflow,user,token]
-    }){
-    if (!item) throw 400;
+async function MongoCreateOne({
+    mongoClient,
+    collectionName,
+    item,
+    // itemType?:oneOf [character,collection/workflow,user,token]
+}) {
+    if (!item) throw "MongoCreate Item not passed";
     try {
-        const {collection:itemCollection,connectedClient}=await getConnectedClientAndCollection(mongoClient,collectionName); 
-    
-        const result=await itemCollection.insertOne(item);
-
-        if (!checkClient(mongoClient)) disconnectClient(connectedClient);
+        const collection = await getConnectedCollection(mongoClient, collectionName);
+        const result = await collection.insertOne(item);
         return result
     }
     catch (err) { throw err; }
 }
 
-exports.MongoInsertOne=AddOne
-exports.MongoCreateOne=AddOne
+module.exports = MongoCreateOne

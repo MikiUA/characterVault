@@ -1,6 +1,12 @@
 node_modules
+.devfolder
+.screenshots
 .backup
 .env
+.bat
 environmentVariables
 temp_chars
 /package.json
+package-lock.json
+OLD_NEW_FRONTEND
+Screenshots

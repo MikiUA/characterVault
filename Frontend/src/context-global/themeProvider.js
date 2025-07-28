@@ -6,7 +6,7 @@ const themeContext=createContext();
 
 export const ThemeProviderComponent=({children})=> {
   const [currentTheme,setCurrentTheme]=useState('standart');
-  const [theme,setTheme]=useState(createTheme('standart'))
+  const [theme,setTheme]=useState(createTheme(themeOptions['standart']))
 
   useEffect(()=>{
     if(!themeOptions[currentTheme]) {setCurrentTheme('standart'); return}

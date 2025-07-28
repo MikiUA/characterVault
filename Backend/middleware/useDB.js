@@ -1,41 +1,26 @@
 const { MongoClient } = require("mongodb");
-// const { closeMongoClient } = require("../exportable_functions/databaseConnection");
-const dbParams = require("../environmentVariables/dbParams")
+const dbParams = require("../env/dbParams");
+const { isConnected } = require("../model/dbFunctions/handlers");
 
-function closeMongoClient(mongoClient){
-  if (!mongoClient.s.hasBeenClosed) { mongoClient.close();  }
-}
-function isConnected(client) {
-  return !!client && !!client.topology && client.topology.isConnected()
-}
-function logC(mongoClient){
-  console.log(isConnected(mongoClient))
-}
-async function useDB(req,res,next){
-    
-    const mongoClient = new MongoClient(dbParams.URI);
-    try {
-      // console.error("NOT connected");
-      // logC(mongoClient);
-
-        await mongoClient.connect();    
-        
-      // console.error("connected");
-      // logC(mongoClient);
-
-
-
-        req.mongoClient=mongoClient;
-        res.on("finish", function() {    
-            closeMongoClient(mongoClient);
-          });
-        next();
-    }
-    catch {
-        try {closeMongoClient(mongoClient);}
-        catch {}
-        res.status(503).send({message:"database unavailible"});
-    }
+function closeMongoClient(mongoClient) {
+  try { mongoClient.close(); } //even if already closed should be considered as no-operation and not throw an error, but is handled just in case
+  catch (err) { if (isConnected(mongoClient)) console.log(err) }
 }
 
-module.exports=useDB
+async function useDB(req, res, next) {
+  const mongoClient = new MongoClient(dbParams.URI);
+  try {
+    await mongoClient.connect();
+    req.mongoClient = mongoClient;
+    res.on("finish", function () {
+      closeMongoClient(mongoClient);
+    });
+    next();
+  }
+  catch {
+    closeMongoClient(mongoClient);
+    res.status(503).send({ message: "Database Unavailible. Sorrry for inconvenience" });
+  }
+}
+
+module.exports = useDB

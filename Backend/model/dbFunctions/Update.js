@@ -1,4 +1,4 @@
-const { disconnectClient, checkClient, getConnectedClientAndCollection } = require("./handlers");
+const { getConnectedCollection } = require("./handlers");
 
 async function UpdateOne({
     mongoClient,
@@ -6,17 +6,13 @@ async function UpdateOne({
     filter,
     item,
     // itemType?:oneOf [character,collection/workflow,user,token]
-}){
+}) {
     if (!item || !filter) throw 400;
-try {
-    const {collection:itemCollection,connectedClient}=await getConnectedClientAndCollection(mongoClient,collectionName); 
-
-    const result=await itemCollection.updateOne(filter,item)
-
-    if (!checkClient(mongoClient)) disconnectClient(connectedClient);
-    return result
-}
-catch (err) { throw err; }
+    try {
+        const collection = await getConnectedCollection(mongoClient, collectionName);
+        return await collection.updateOne(filter, item);
+    }
+    catch (err) { throw err; }
 }
 
 async function ReplaceOne({
@@ -25,19 +21,16 @@ async function ReplaceOne({
     filter,
     item,
     // itemType?:oneOf [character,collection/workflow,user,token]
-}){
-if (!item || !filter) throw 400;
-try {
-    const {collection:itemCollection,connectedClient}=await getConnectedClientAndCollection(mongoClient,collectionName); 
-
-    const result=await itemCollection.replaceOne(filter,item);
-
-    if (!checkClient(mongoClient)) disconnectClient(connectedClient);
-    return result
-}
-catch (err) { throw err; }
+}) {
+    if (!item || !filter) throw 400;
+    try {
+        const collection = await getConnectedCollection(mongoClient, collectionName);
+        return await collection.replaceOne(filter, item);
+    }
+    catch (err) { throw err; }
 }
 
 
-exports.MongoUpdateOne=UpdateOne
-exports.MongoReplaceOne=ReplaceOne
+exports.MongoUpdateOne = UpdateOne
+exports.MongoPatchOne = UpdateOne
+exports.MongoReplaceOne = ReplaceOne

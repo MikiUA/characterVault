@@ -1,44 +1,9 @@
-import { useEffect, useState } from "react";
+//placeholder;
+import useDebounce from "./hooks/useDebounce";
+import useLocalStorage from "./hooks/useLocalStorage";
 
-export function useDebounce(value,delay){
-    const [debouncedValue,setDebouncedValue]=useState(value);
-
-    useEffect(()=>{
-
-        const handler = setTimeout(()=>{
-            setDebouncedValue(value);
-        },delay);
-
-        return () =>{
-            clearTimeout(handler);
-        };
-    },[value,delay]);
-
-    return debouncedValue;
-}
-
-export function useLocalStorage (key, defaultValue){
-    const [value, setValue] = useState(() => {
-      let currentValue;
-  
-      try {
-        currentValue = JSON.parse(
-          localStorage.getItem(key) || String(defaultValue)
-        );
-      } catch (error) {
-        currentValue = defaultValue;
-      }
-  
-      return currentValue;
-    });
-  
-    useEffect(() => {
-      localStorage.setItem(key, JSON.stringify(value));
-    }, [value, key]);
-  
-    return [value, setValue];
-  };
-  
+export const useDebounce = useDebounce;
+export const useLocalStorage = useLocalStorage;
 // export function useCharacterCard(){
 
 //   function getLocalStorageCharCard(){

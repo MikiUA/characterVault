@@ -5,10 +5,10 @@ export function getCookie(key = "") {
 }
 
 export function setCookie(key = "", value = "") {
-  if (!key ) return;
+  if (!key) return;
   // localStorage.setItem(key,value);  
   const d = new Date();
-  d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000);
+  d.setTime(d.getTime() + 7 * 24 * 60 * 60 * 1000);//1 week
   let expires = "expires=" + d.toUTCString();
   document.cookie = key + "=" + value + ";" + expires + ";path=/";
 }

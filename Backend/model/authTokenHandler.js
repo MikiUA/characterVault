@@ -1,52 +1,57 @@
-const jwt= require('jsonwebtoken');
-const { ACCESS_TOKEN_VIEW,ACCESS_TOKEN_VIEW_EXPIERY_TIMER,ACCESS_TOKEN_EDIT } = require('../environmentVariables/accessTokens');
-const dbParams = require("../environmentVariables/dbParams");
+const jwt = require('jsonwebtoken');
+const { ACCESS_TOKEN_VIEW, ACCESS_TOKEN_VIEW_EXPIERY_TIMER, ACCESS_TOKEN_EDIT } = process.env
+const dbParams = require("../env/dbParams");
 const { MongoCreateOne, MongoFindOne } = require("./databaseConnection");
 
-exports.createViewToken=({userid,device='unhandled'})=>{
-    const viewToken=jwt.sign({userid,device},ACCESS_TOKEN_VIEW, {expiresIn:ACCESS_TOKEN_VIEW_EXPIERY_TIMER});
+function createViewToken({ userid, device = 'no device specified' }) {
+    const viewToken = jwt.sign({ userid, device }, ACCESS_TOKEN_VIEW, { expiresIn: ACCESS_TOKEN_VIEW_EXPIERY_TIMER });
     return viewToken
 }
 
-exports.createEditToken=async({userid,device='unhandled'},mongoClient)=>{
-    const editToken=jwt.sign({username:userid},ACCESS_TOKEN_EDIT).split('.')[2];
+async function createEditToken({ userid, device = 'no device specified' }, mongoClient) {
+    const editToken = jwt.sign({ userid, device }, ACCESS_TOKEN_EDIT).split('.')[2] + Math.floor((Math.random() * 100));
     await MongoCreateOne({
-        mongoClient:mongoClient,
-        collectionName:dbParams.collectionNames.sessionTokens,
-        item:{
-            _id:editToken,
-            userid,device
+        mongoClient: mongoClient,
+        collectionName: dbParams.collectionNames.sessionTokens,
+        item: {
+            _id: editToken,
+            userid, device
         }
     })
     return editToken
 }
 
-exports.createViewEditTokens=async({userid,device},mongoClient)=>{
-    const viewToken=await this.createViewToken({userid,device});
-    const editToken=await this.createEditToken({userid,device},mongoClient);
-    return {viewToken,editToken}
+async function createViewEditTokens({ userid, device }, mongoClient) {
+    const viewToken = await createViewToken({ userid, device });
+    const editToken = await createEditToken({ userid, device }, mongoClient);
+    return { viewToken, editToken }
 }
 
-exports.verifyViewToken=async(token)=>{
+async function verifyViewToken(token) {
     try {
-        const user=jwt.verify(token,ACCESS_TOKEN_VIEW);
-        return user['userid']||null
+        const user = jwt.verify(token, ACCESS_TOKEN_VIEW);
+        return user['userid'] || null
     }
     catch {
         return null
     }
 }
 
-exports.verifyEditToken=async(token,mongoClient)=>{
+async function verifyEditToken(token, mongoClient) {
     try {
         const userToken = await MongoFindOne({
             mongoClient,
-            filter:{_id:token},
-            collectionName:dbParams.collectionNames.sessionTokens
+            filter: { _id: token },
+            collectionName: dbParams.collectionNames.sessionTokens
         })
-        return userToken['userid']||null;
+        return userToken['userid'] || null;
     }
-    catch{
+    catch {
         return null
     }
+}
+
+module.exports = {
+    createViewToken, createEditToken, createViewEditTokens,
+    verifyViewToken, verifyEditToken
 }

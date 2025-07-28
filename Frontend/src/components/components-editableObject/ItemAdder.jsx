@@ -4,7 +4,7 @@ import { useEditableObjectItemAdder } from './editObjectContext';
 
 export function AddItemOverlay({close,handleSubmit}){
     const [newParamKey,setKey]=useState('');
-    const pattern= new RegExp("^[A-Z0-9Є-Я][A-Za-z0-9Є-ї '-]{1,14}$");
+    // const pattern= new RegExp("^[A-Z0-9Є-Я][A-Za-z0-9Є-ї '-]{1,14}$");
     function doInput(newInput){
         // if (pattern.test(newInput))         
         setKey(newInput);
