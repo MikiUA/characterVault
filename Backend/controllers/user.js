@@ -27,7 +27,7 @@ async function patchUser(req, userID) {
 }
 async function deleteUser(req) {
     try {
-        //delete editToken entry
+        //delete all editToken entries
         await signout(req, true);
         //delete all user's characters
         await MongoDeleteMany({
@@ -47,7 +47,7 @@ async function deleteUser(req) {
             collectionName: dbParams.collectionNames.users,
             filter: { _id: req.user }
         })
-        return 204
+        return {}//204
     }
     catch (err) {
         console.log(err.name + " : " + err.message);

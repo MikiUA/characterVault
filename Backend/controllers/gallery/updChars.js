@@ -8,6 +8,7 @@ async function newChar(req) {
     const shname = req.body.shname, host = usernameToUserID(req.user);
     if (typeof (!shname) !== 'string') throw new ValidationError('Please input shname to create a character');
     const newChar = new CHARACTER({ ...req.body, host: host });
+    console.log("creating char: ",host,"_",shname);
     return await MongoCreateOne({
         mongoClient: req.mongoClient,
         collectionName: dbParams.collectionNames.characters,

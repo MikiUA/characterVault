@@ -36,6 +36,26 @@ describe("________    AUTHORISATION    ________", () => {
     }
 
     describe('POST /register', () => {
+        describe('400: Bad request', () => {
+            it('password empty', async () => {
+                const res = await request(app)
+                    .post("/auth/register")
+                    .send({ username, "password": "", "email": "devtest-user@m.mail" });
+                expect(res.statusCode).toBe(400);
+            });
+            it('username wrong type', async () => {
+                const res = await request(app)
+                    .post("/auth/register")
+                    .send({ "password": "Development TESTER", "username": 2, email: "w" });
+                expect(res.statusCode).toBe(400);
+            });
+            it('empty body', async () => {
+                const res = await request(app)
+                    .post("/auth/register")
+                expect(res.statusCode).toBe(400);
+            });
+        });
+
         it('201: REGISTER USR1 ||403: USER DOES EXIST', async () => {
             const res = await request(app)
                 .post("/auth/register")
@@ -61,31 +81,18 @@ describe("________    AUTHORISATION    ________", () => {
             }
         })
 
-        describe('400: Bad request', () => {
-            it('password empty', async () => {
-                const res = await request(app)
-                    .post("/auth/register")
-                    .send({ username, "password": "", "email": "devtest-user@m.mail" });
-                expect(res.statusCode).toBe(400);
-            });
-            it('username wrong type', async () => {
-                const res = await request(app)
-                    .post("/auth/register")
-                    .send({ "password": "Development TESTER", "username": 2, email: "w" });
-                expect(res.statusCode).toBe(400);
-            });
-            it('empty body', async () => {
-                const res = await request(app)
-                    .post("/auth/register")
-                expect(res.statusCode).toBe(400);
-            });
-        });
-
+        
         describe('403: Forbidden', () => {
-            it('Username or Email taken', async () => {
+            it('Username taken', async () => {
                 const res = await request(app)
                     .post("/auth/register")
                     .send({ username, "password": "newpassword", "email": "mail" });
+                expect(res.statusCode).toBe(403);
+            })
+            it('Email taken', async () => {
+                const res = await request(app)
+                    .post("/auth/register")
+                    .send({ "username":"emailtakenuser", "password": "newpassword", "email": "devtest-user@m.mail" });
                 expect(res.statusCode).toBe(403);
             })
         });
@@ -159,6 +166,7 @@ describe("________    AUTHORISATION    ________", () => {
     });
 })
 //#endregion
+
 
 //#region gallery characters
 describe("________    GALLERY    CHARACTERS    ________", () => {
@@ -407,10 +415,10 @@ describe("________    GALLERY    CHARACTERS    ________", () => {
             const privateChar = res.body.items.find(char => char.shname === "Basho");
             expect(privateChar).toBeUndefined();
         });
-        //404? don't know the fuck should happen for this to get 404, skip for now leave comment
+        //404? don't know the fuck should happen for this to get 404, skip for now leave comment (TODO)
     })
     describe("GET /gallery/characters/my", () => {
-        it("200: return all personal created characters with view token", async () => {
+        it("200: return all personal created characters, access with view token", async () => {
             const res = await request(app)
                 .get("/gallery/characters/my")
                 .set('Authorization', `Bearer ${viewToken}`);
@@ -464,6 +472,15 @@ describe("________    GALLERY    CHARACTERS    ________", () => {
             const res = await request(app).get(`/gallery/characters/user/nonexistent_userid`);
             expect(res.status).toBe(404);
         });
+        it("200: but user has no public characters", async () => {
+            await request(app).post("/auth/register").send({ "username": "userwithoutchars", "password": "newpassword", "email": "withoutchars@m.mail" });
+            //not interested if it is 200 or 403
+            const res = await request(app).get(`/gallery/characters/user/userwithoutchars`);
+            expect(res.status).toBe(200);
+            expect(res.body.items).toHaveLength(0);
+            
+        });
+        
     });
 })
 //#endregion
@@ -488,11 +505,11 @@ describe('delete user', () => {
             .send({ "username": username, "password": "newpassword", "email": "devtest-user@m.mail" });
         expect(res.statusCode).toBe(404);
     })
-    it('USER DELETE 404', async () => {
+    it('USER DELETE 401, if user deleted no edit tokens remained, so no way to delete either', async () => {
         const res = await request(app)
             .delete('/users')
             .set('Authorization', `Bearer ${editToken}`);
-        expect(res.statusCode).toBe(404);
+        expect(res.statusCode).toBe(401);
     })
 })
 //#endregion

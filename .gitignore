@@ -7,6 +7,6 @@ node_modules
 environmentVariables
 temp_chars
 /package.json
-package-lock.json
+**/package-lock.json
 OLD_NEW_FRONTEND
 Screenshots

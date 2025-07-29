@@ -4,7 +4,7 @@ function middlewareHandler(middlewareFn, responses) {
   return async function (req, res, next) {
     try {
       const result = await middlewareFn(req, res, next);
-      console.log("handled ", middlewareFn, " returned: ", typeof (result) === 'object' && 'object' || result);
+      // console.log("handled ", middlewareFn, " returned: ", typeof (result) === 'object' && 'object' || result);
       if (typeof (result) === 'function' && result.name === 'next') return result();
       if (result instanceof Error) throw result;
       if (typeof (result) !== 'object') throw new Error('Middleware should return an object but returned', typeof (result))

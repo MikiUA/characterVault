@@ -55,7 +55,7 @@ const successItem = {
         }
     }
 }
-const reqBodyCh = swaggerOptions.components.schemas['Character (request)'],
+const reqBodyCh = swaggerOptions.components.schemas['Character'],
     reqBodyCol = swaggerOptions.components.schemas['Collection (request)'],
     reqBodyUsr = swaggerOptions.components.schemas['User, private (Responce)'],
     middleware = authoriseEdit,

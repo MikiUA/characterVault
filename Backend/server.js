@@ -5,13 +5,13 @@ require("dotenv").config({ path: './env/.env' });
 const { logger, initiateLog } = require('./middleware/logger');
 const cors = require('./middleware/cors');
 const router = require('./view/router');
-const useDB = require('./middleware/useDB');
 
-app.use(logger);
+let test = 1;//(process.env.DEVMODE.toUpperCase() == "TEST")
+if (test==0) app.use(logger);
+
 app.use([express.json(), cors, router]);
-// if (process.env.DEVMODE.toUpperCase() !== "TEST") {
-   
-    app.listen(process.env.PORT, initiateLog)
-// }
+
+if (test==0) app.listen(process.env.PORT, initiateLog)
+
 
 module.exports = app
